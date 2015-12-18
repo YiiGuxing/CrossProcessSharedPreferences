@@ -33,18 +33,16 @@ public class RemoteSharedPreferencesProxy implements SharedPreferences {
      * 从而导致OnSharedPreferenceChangeListenerProxy泄漏而无法被回收。 */
     private static final List<IRemoteSharedPreferences> sRemoteHolder =
             Collections.synchronizedList(new LinkedList<IRemoteSharedPreferences>());
+    private static final Object sContent = new Object();
 
     private final IRemoteSharedPreferences mRemote;
-
-    private static final Object sContent = new Object();
-    final WeakHashMap<OnSharedPreferenceChangeListener, Object> mListeners = new WeakHashMap<>();
-    private final IOnSharedPreferenceChangeListener mOnChangeListener;
-
+    private IOnSharedPreferenceChangeListener mOnChangeListener;
     private boolean mListenerRegistered;
+
+    final WeakHashMap<OnSharedPreferenceChangeListener, Object> mListeners = new WeakHashMap<>();
 
     public RemoteSharedPreferencesProxy(@NonNull IRemoteSharedPreferences sharedPreferences) {
         mRemote = sharedPreferences;
-        mOnChangeListener = new OnSharedPreferenceChangeListenerProxy(this);
     }
 
     @Nullable
@@ -156,6 +154,10 @@ public class RemoteSharedPreferencesProxy implements SharedPreferences {
     private boolean registerOnRemoteSharedPreferenceChangeListener() {
         try {
             if (!mListenerRegistered) {
+                if (mOnChangeListener == null) {
+                    mOnChangeListener = new OnSharedPreferenceChangeListenerProxy(this);
+                }
+
                 mListenerRegistered =
                         mRemote.registerOnSharedPreferenceChangeListener(mOnChangeListener);
                 sRemoteHolder.add(mRemote);
@@ -197,10 +199,16 @@ public class RemoteSharedPreferencesProxy implements SharedPreferences {
             if (listener != null) {
                 mListeners.remove(listener);
 
-                if (mListeners.size() == 0 && mListenerRegistered) {
+                if (mListeners.size() == 0) {
                     unregisterOnRemoteSharedPreferenceChangeListener();
                 }
             }
+        }
+    }
+
+    Set<OnSharedPreferenceChangeListener> getListenerSet() {
+        synchronized (this) {
+            return mListeners.keySet();
         }
     }
 
@@ -236,7 +244,7 @@ public class RemoteSharedPreferencesProxy implements SharedPreferences {
                     if (prefs == null)
                         return;
 
-                    Set<OnSharedPreferenceChangeListener> listeners = prefs.mListeners.keySet();
+                    Set<OnSharedPreferenceChangeListener> listeners = prefs.getListenerSet();
                     for (OnSharedPreferenceChangeListener listener : listeners) {
                         if (listener != null)
                             listener.onSharedPreferenceChanged(prefs, key);
