@@ -12,7 +12,7 @@ import android.support.annotation.Nullable;
 import cn.tinkling.prefs.RemoteSharedPreferences;
 import cn.tinkling.prefs.RemoteSharedPreferencesDescriptor;
 
-public class MyContentProvider extends ContentProvider {
+public class RemoteProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {

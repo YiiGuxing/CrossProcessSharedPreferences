@@ -21,8 +21,9 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 /**
- * RemoteSharedPreferencesProxy
- * <p/>
+ * Adapts an {@link IRemoteSharedPreferences} to a {@link SharedPreferences} for use
+ * in the local process.
+ * <p>
  * Created by tinkling on 15/12/18.
  */
 public class RemoteSharedPreferencesProxy implements SharedPreferences {
@@ -40,6 +41,10 @@ public class RemoteSharedPreferencesProxy implements SharedPreferences {
     private boolean mListenerRegistered;
 
     final WeakHashMap<OnSharedPreferenceChangeListener, Object> mListeners = new WeakHashMap<>();
+
+    public RemoteSharedPreferencesProxy(@NonNull RemoteSharedPreferencesDescriptor d) {
+        this(d.remoteSharedPreferences);
+    }
 
     public RemoteSharedPreferencesProxy(@NonNull IRemoteSharedPreferences sharedPreferences) {
         mRemote = sharedPreferences;

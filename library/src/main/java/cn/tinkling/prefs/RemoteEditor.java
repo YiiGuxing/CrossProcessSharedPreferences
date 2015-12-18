@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 /**
- * RemoteEditor
+ * Wraps an existing {@link SharedPreferences.Editor} making it remotable.
  * <p>
  * Created by tinkling on 15/12/18.
  */

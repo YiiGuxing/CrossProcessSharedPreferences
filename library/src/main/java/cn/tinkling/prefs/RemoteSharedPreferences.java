@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * RemoteSharedPreferences
+ * Wraps an existing {@link SharedPreferences} making it remotable.
  * <p>
  * Created by tinkling on 15/12/17.
  */
@@ -22,8 +22,11 @@ public class RemoteSharedPreferences extends IRemoteSharedPreferences.Stub {
 
     private final SharedPreferences mSharedPreferences;
 
-    private final RemoteCallbackList<IOnSharedPreferenceChangeListener> mListenerList =
+    final RemoteCallbackList<IOnSharedPreferenceChangeListener> mListenerList =
             new RemoteCallbackList<>();
+    /* 不怕内存泄漏？如果mSharedPreferences来自于Context.getSharedPreferences()，那么不必担心，因为默认的
+     * SharedPreferences的实现对Listener的引用为弱引用。但如果mSharedPreferences来自于其他来源，那就需要考
+     * 虑考虑内存泄漏泄漏的问题了。 */
     private final SharedPreferences.OnSharedPreferenceChangeListener mListener =
             new SharedPreferences.OnSharedPreferenceChangeListener() {
                 @Override

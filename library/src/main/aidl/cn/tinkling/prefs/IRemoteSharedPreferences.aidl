@@ -5,6 +5,17 @@ import java.util.Map;
 import cn.tinkling.prefs.IRemoteEditor;
 import cn.tinkling.prefs.IOnSharedPreferenceChangeListener;
 
+/**
+ * Interface for accessing and modifying preference data returned by {@link
+ * Context#getSharedPreferences}.  For any particular set of preferences,
+ * there is a single instance of this class that all clients share.
+ * Modifications to the preferences must go through an {@link Editor} object
+ * to ensure the preference values remain in a consistent state and control
+ * when they are committed to storage.  Objects that are returned from the
+ * various <code>get</code> methods must be treated as immutable by the application.
+ *
+ * This class supported use across multiple processes.
+ */
 interface IRemoteSharedPreferences {
 
         /**
@@ -18,6 +29,7 @@ interface IRemoteSharedPreferences {
          * the preferences.
          *
          * @throws NullPointerException
+         * @throws ClassCastException
          */
         Map getAll();
 

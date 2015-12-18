@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity implements
         call.setClassLoader(RemoteSharedPreferencesDescriptor.class.getClassLoader());
 
         RemoteSharedPreferencesDescriptor d = call.getParcelable("preferences");
-        preferences = new RemoteSharedPreferencesProxy(d.remoteSharedPreferences);
+        preferences = new RemoteSharedPreferencesProxy(d);
 
         preferences.registerOnSharedPreferenceChangeListener(this);
 

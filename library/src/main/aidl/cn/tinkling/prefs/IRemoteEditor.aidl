@@ -4,9 +4,9 @@ package cn.tinkling.prefs;
 import java.util.List;
 
 /**
- * Interface used for modifying values in a {@link IRemoteSharedPreferences}
+ * Interface used for modifying values in a {@link SharedPreferences}
  * object.  All changes you make in an editor are batched, and not copied
- * back to the original {@link IRemoteSharedPreferences} until you call {@link #commit}
+ * back to the original {@link SharedPreferences} until you call {@link #commit}
  * or {@link #apply}
  */
 interface IRemoteEditor {

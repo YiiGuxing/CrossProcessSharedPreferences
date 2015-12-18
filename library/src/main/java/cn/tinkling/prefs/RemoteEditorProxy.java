@@ -10,7 +10,8 @@ import android.util.Log;
 import java.util.Set;
 
 /**
- * RemoteEditorProxy
+ * Adapts an {@link IRemoteEditor} to a {@link SharedPreferences.Editor} for use
+ * in the local process.
  * <p>
  * Created by tinkling on 15/12/18.
  */
