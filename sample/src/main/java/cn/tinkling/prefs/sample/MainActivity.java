@@ -1,20 +1,48 @@
 package cn.tinkling.prefs.sample;
 
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import java.util.HashSet;
+import java.util.Random;
 
+import cn.tinkling.prefs.RemoteSharedPreferences;
 import cn.tinkling.prefs.RemoteSharedPreferencesDescriptor;
 import cn.tinkling.prefs.RemoteSharedPreferencesProxy;
 
-public class MainActivity extends AppCompatActivity implements
-        SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends AppCompatActivity {
 
-    SharedPreferences preferences;
+    private static final int FROM_BUNDLE = 0;
+    private static final int FROM_BINDER = 1;
+
+    SharedPreferences fromBundle;
+    PreferenceChangeListener listenerBundle;
+
+    SharedPreferences fromBinder;
+    PreferenceChangeListener listenerBinder;
+
+
+    ServiceConnection conn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            fromBinder = new RemoteSharedPreferencesProxy(RemoteSharedPreferences.asInterface(service));
+            listenerBinder = new PreferenceChangeListener(FROM_BINDER);
+            fromBinder.registerOnSharedPreferenceChangeListener(listenerBinder);
+            onRemoteSharedPreferencesConnected(fromBinder, FROM_BINDER);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,21 +54,28 @@ public class MainActivity extends AppCompatActivity implements
         call.setClassLoader(RemoteSharedPreferencesDescriptor.class.getClassLoader());
 
         RemoteSharedPreferencesDescriptor d = call.getParcelable("preferences");
-        preferences = new RemoteSharedPreferencesProxy(d);
+        fromBundle = new RemoteSharedPreferencesProxy(d);
+        listenerBundle = new PreferenceChangeListener(FROM_BUNDLE);
+        fromBundle.registerOnSharedPreferenceChangeListener(listenerBundle);
+        onRemoteSharedPreferencesConnected(fromBundle, FROM_BUNDLE);
 
-        preferences.registerOnSharedPreferenceChangeListener(this);
+        Intent binder = new Intent(this, RemoteService.class);
+        bindService(binder, conn, BIND_AUTO_CREATE);
+    }
 
-        Log.w("SharedPreferences", "===================================");
-        Log.i("SharedPreferences", "getInt:       " + preferences.getInt("int", -1));
-        Log.i("SharedPreferences", "getLong:      " + preferences.getLong("long", -1));
-        Log.i("SharedPreferences", "getFloat:     " + preferences.getFloat("float", -1));
-        Log.i("SharedPreferences", "getString:    " + preferences.getString("string", null));
-        Log.w("SharedPreferences", "===================================");
+    private void onRemoteSharedPreferencesConnected(final SharedPreferences preferences, final int from) {
+        log(from, "===================================");
+        log(from, "getInt:       " + preferences.getInt("int", -1));
+        log(from, "getLong:      " + preferences.getLong("long", -1));
+        log(from, "getFloat:     " + preferences.getFloat("float", -1));
+        log(from, "getString:    " + preferences.getString("string", null));
+        log(from, "===================================");
 
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt("int", 1);
-        editor.putLong("long", 2);
-        editor.putFloat("float", 3.8f);
+        Random random = new Random();
+        editor.putInt("int", random.nextInt());
+        editor.putLong("long", random.nextLong());
+        editor.putFloat("float", random.nextFloat());
         editor.putString("string", "string---");
         editor.putBoolean("boolean", true);
         HashSet<String> set = new HashSet<>();
@@ -51,15 +86,15 @@ public class MainActivity extends AppCompatActivity implements
         editor.putStringSet("stringSet", set);
         editor.apply();
 
-        Log.w("SharedPreferences", "===================================");
-        Log.i("SharedPreferences", "getInt:       " + preferences.getInt("int", -1));
-        Log.i("SharedPreferences", "getLong:      " + preferences.getLong("long", -1));
-        Log.i("SharedPreferences", "getFloat:     " + preferences.getFloat("float", -1));
-        Log.i("SharedPreferences", "getString:    " + preferences.getString("string", null));
-        Log.i("SharedPreferences", "getBoolean:   " + preferences.getBoolean("boolean", false));
-        Log.i("SharedPreferences", "getStringSet: " + preferences.getStringSet("stringSet", null));
-        Log.i("SharedPreferences", "getAll:       " + preferences.getAll());
-        Log.w("SharedPreferences", "===================================");
+        log(from, "===================================");
+        log(from, "getInt:       " + preferences.getInt("int", -1));
+        log(from, "getLong:      " + preferences.getLong("long", -1));
+        log(from, "getFloat:     " + preferences.getFloat("float", -1));
+        log(from, "getString:    " + preferences.getString("string", null));
+        log(from, "getBoolean:   " + preferences.getBoolean("boolean", false));
+        log(from, "getStringSet: " + preferences.getStringSet("stringSet", null));
+        log(from, "getAll:       " + preferences.getAll());
+        log(from, "===================================");
 
         new Thread(new Runnable() {
             @Override
@@ -72,44 +107,65 @@ public class MainActivity extends AppCompatActivity implements
                 editor.remove("string");
                 editor.commit();
 
-                Log.w("SharedPreferences", "===================================");
-                Log.i("SharedPreferences", "getInt:       " + preferences.getInt("int", -1));
-                Log.i("SharedPreferences", "getLong:      " + preferences.getLong("long", -1));
-                Log.i("SharedPreferences", "getFloat:     " + preferences.getFloat("float", -1));
-                Log.i("SharedPreferences",
-                        "getString:    " + preferences.getString("string", null));
-                Log.i("SharedPreferences", "getAll:       " + preferences.getAll());
-                Log.w("SharedPreferences", "===================================");
+                log(from, "===================================");
+                log(from, "getInt:       " + preferences.getInt("int", -1));
+                log(from, "getLong:      " + preferences.getLong("long", -1));
+                log(from, "getFloat:     " + preferences.getFloat("float", -1));
+                log(from, "getString:    " + preferences.getString("string", null));
+                log(from, "getAll:       " + preferences.getAll());
+                log(from, "===================================");
 
                 editor.clear();
                 editor.apply();
-                Log.e("SharedPreferences", "getAll:       " + preferences.getAll());
-
+                log(from, "getAll:       " + preferences.getAll());
 
                 editor.putFloat("float", 333.8f);
                 editor.putString("string", "ABCDEF");
                 editor.apply();
             }
         }).start();
-
-    }
-
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        Log.i("SharedPreferences", "onSharedPreferenceChanged: key=" + key + ", ThreadName=" +
-                Thread.currentThread().getName());
     }
 
     @Override
     protected void onDestroy() {
-        preferences.unregisterOnSharedPreferenceChangeListener(this);
+        fromBundle.unregisterOnSharedPreferenceChangeListener(listenerBundle);
+        fromBinder.unregisterOnSharedPreferenceChangeListener(listenerBinder);
+
+        unbindService(conn);
+
         super.onDestroy();
     }
 
     @Override
     protected void finalize() throws Throwable {
         Log.d("MainActivity", "finalize!!!");
-
         super.finalize();
     }
+
+    static void log(int from, String msg) {
+        switch (from) {
+            case FROM_BUNDLE:
+                Log.d("SharedPreferences", "Bundle - " + msg);
+                break;
+            case FROM_BINDER:
+                Log.i("SharedPreferences", "Binder - " + msg);
+                break;
+        }
+    }
+
+    static class PreferenceChangeListener implements
+            SharedPreferences.OnSharedPreferenceChangeListener {
+
+        private int from;
+
+        PreferenceChangeListener(int from) {
+            this.from = from;
+        }
+
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            log(from, "onSharedPreferenceChanged: key=" + key);
+        }
+    }
+
 }

@@ -64,6 +64,9 @@ public class RemoteProvider extends ContentProvider {
             RemoteSharedPreferencesDescriptor descriptor = rsp.getSharedPreferencesDescriptor();
 
             Bundle bundle = new Bundle();
+
+            // If API level >= 18.
+            // bundle.putBinder("preferences", rsp);
             bundle.putParcelable("preferences", descriptor);
             return bundle;
         }

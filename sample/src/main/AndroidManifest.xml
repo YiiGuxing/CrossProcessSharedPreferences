@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    package="cn.tinkling.prefs.sample"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cn.tinkling.prefs.sample">
 
     <application
         android:allowBackup="true"
@@ -11,9 +10,9 @@
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
@@ -22,8 +21,13 @@
             android:authorities="cn.tinkling.prefs"
             android:enabled="true"
             android:exported="false"
-            android:process=":remote">
-        </provider>
+            android:process=":remote" />
+
+        <service
+            android:name=".RemoteService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":remote" />
     </application>
 
 </manifest>
