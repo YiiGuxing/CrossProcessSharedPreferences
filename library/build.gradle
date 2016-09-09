@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion '23.0.2'
+    buildToolsVersion '23.0.3'
 
     defaultConfig {
         minSdkVersion 15
@@ -16,6 +16,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    aidlPackageWhiteList "cn/tinkling/prefs/IRemoteSharedPreferences.aidl",
+            "cn/tinkling/prefs/IRemoteEditor.aidl",
+            "cn/tinkling/prefs/IOnSharedPreferenceChangeListener.aidl"
 }
 
 dependencies {

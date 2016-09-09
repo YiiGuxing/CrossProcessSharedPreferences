@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion '23.0.2'
+    buildToolsVersion '23.0.3'
 
     defaultConfig {
     applicationId "cn.tinkling.prefs.sample"
@@ -25,6 +25,6 @@ dependencies {
     compile 'com.android.support:support-annotations:23.1.1'
     testCompile 'junit:junit:4.12'
 
-    // compile project(':library')
-    compile 'cn.tinkling.prefs:remote-shared-preferences:1.0.0'
+    compile project(':library')
+    // compile 'cn.tinkling.prefs:remote-shared-preferences:1.0.0'
 }
