@@ -12,6 +12,12 @@ compile 'cn.tinkling.prefs:remote-shared-preferences:1.0.1'
 用法
 ----
 
+
+
+### [**使用示例**](https://github.com/YiiGuxing/AndroidRemoteSharedPreferences/tree/master/sample/src/main/java/cn/tinkling/prefs/sample)
+
+
+
 **1.通过Bundle**
 
 - 远程进程:
@@ -120,4 +126,4 @@ compile 'cn.tinkling.prefs:remote-shared-preferences:1.0.1'
 
 
 
-#### [**使用示例**](https://github.com/YiiGuxing/AndroidRemoteSharedPreferences/tree/master/sample/src/main/java/cn/tinkling/prefs/sample)
+### [**使用示例**](https://github.com/YiiGuxing/AndroidRemoteSharedPreferences/tree/master/sample/src/main/java/cn/tinkling/prefs/sample)
