@@ -16,7 +16,21 @@ public class RemoteService extends Service {
     public static final String ACTION_REMOTE_SHARED_PREFERENCES_AIDL =
             "remote_shared_preferences_aidl";
 
-    public RemoteService() {
+    private RemoteSharedPreferences mRemotePrefs;
+
+    private final IBinder mMyAidlInterface = new IMyAidlInterface.Stub() {
+        @Override
+        public IRemoteSharedPreferences getRemoteSharedPreferences() throws RemoteException {
+            return mRemotePrefs;
+        }
+    };
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        SharedPreferences prefs = getSharedPreferences("preferences", Context.MODE_PRIVATE);
+        mRemotePrefs = new RemoteSharedPreferences(prefs);
     }
 
     @Override
@@ -27,19 +41,10 @@ public class RemoteService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         String action = intent.getAction();
-        SharedPreferences prefs = getSharedPreferences("preferences", Context.MODE_PRIVATE);
-        final RemoteSharedPreferences remotePrefs = new RemoteSharedPreferences(prefs);
-
-        if (ACTION_REMOTE_SHARED_PREFERENCES.equals(action)) {
-            return remotePrefs;
-        } else if (ACTION_REMOTE_SHARED_PREFERENCES_AIDL.equals(action)) {
-            return new IMyAidlInterface.Stub() {
-                @Override
-                public IRemoteSharedPreferences getRemoteSharedPreferences()
-                        throws RemoteException {
-                    return remotePrefs;
-                }
-            };
+        if (ACTION_REMOTE_SHARED_PREFERENCES.equals(action)) { // binder
+            return mRemotePrefs;
+        } else if (ACTION_REMOTE_SHARED_PREFERENCES_AIDL.equals(action)) { // aidl
+            return mMyAidlInterface;
         }
 
         throw new UnsupportedOperationException("Action:" + action);

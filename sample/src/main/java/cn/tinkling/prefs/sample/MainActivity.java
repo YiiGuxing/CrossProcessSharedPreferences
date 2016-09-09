@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -25,42 +26,41 @@ public class MainActivity extends AppCompatActivity {
     private static final int FROM_BINDER = 1;
     private static final int FROM_AIDL = 2;
 
-    SharedPreferences fromBundle;
-    PreferenceChangeListener listenerBundle;
+    private SharedPreferences fromBundle;
+    private PreferenceChangeListener listenerBundle;
 
-    SharedPreferences fromBinder;
-    PreferenceChangeListener listenerBinder;
+    private SharedPreferences fromBinder;
+    private PreferenceChangeListener listenerBinder;
 
-    SharedPreferences fromAidl;
-    PreferenceChangeListener listenerAidl;
+    private SharedPreferences fromAidl;
+    private PreferenceChangeListener listenerAidl;
 
-
-    ServiceConnection conn = new ServiceConnection() {
+    private final ServiceConnection conn = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            fromBinder =
-                    new RemoteSharedPreferencesProxy(RemoteSharedPreferences.asInterface(service));
+            IRemoteSharedPreferences remotePrefs = RemoteSharedPreferences.asInterface(service);
+            fromBinder = new RemoteSharedPreferencesProxy(remotePrefs);
             listenerBinder = new PreferenceChangeListener(FROM_BINDER);
             fromBinder.registerOnSharedPreferenceChangeListener(listenerBinder);
+
             onRemoteSharedPreferencesConnected(fromBinder, FROM_BINDER);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-
         }
     };
 
-    ServiceConnection connAidl = new ServiceConnection() {
+    private final ServiceConnection connAidl = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             try {
-                IRemoteSharedPreferences remoteSharedPreferences =
-                        IMyAidlInterface.Stub.asInterface(service).getRemoteSharedPreferences();
-                fromAidl = new RemoteSharedPreferencesProxy(
-                        remoteSharedPreferences);
+                IMyAidlInterface myAidlInterface = IMyAidlInterface.Stub.asInterface(service);
+                IRemoteSharedPreferences remotePrefs = myAidlInterface.getRemoteSharedPreferences();
+                fromAidl = new RemoteSharedPreferencesProxy(remotePrefs);
                 listenerAidl = new PreferenceChangeListener(FROM_AIDL);
                 fromAidl.registerOnSharedPreferenceChangeListener(listenerAidl);
+
                 onRemoteSharedPreferencesConnected(fromAidl, FROM_AIDL);
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -69,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-
         }
     };
 
@@ -78,20 +77,38 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        bindFromBundle();
+        bindFromBinder();
+        bindFromAidl();
+    }
+
+    private void bindFromBundle() {
         Uri uri = Uri.parse("content://cn.tinkling.prefs");
         Bundle call = getContentResolver().call(uri, "getRemoteSharedPreferences", null, null);
-        call.setClassLoader(RemoteSharedPreferencesDescriptor.class.getClassLoader());
 
-        RemoteSharedPreferencesDescriptor d = call.getParcelable("preferences");
-        fromBundle = new RemoteSharedPreferencesProxy(d);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            IBinder binder = call.getBinder("preferences");
+            IRemoteSharedPreferences remotePrefs = RemoteSharedPreferences.asInterface(binder);
+            fromBundle = new RemoteSharedPreferencesProxy(remotePrefs);
+        } else {
+            call.setClassLoader(RemoteSharedPreferencesDescriptor.class.getClassLoader());
+            RemoteSharedPreferencesDescriptor d = call.getParcelable("preferences");
+            fromBundle = new RemoteSharedPreferencesProxy(d);
+        }
+
         listenerBundle = new PreferenceChangeListener(FROM_BUNDLE);
         fromBundle.registerOnSharedPreferenceChangeListener(listenerBundle);
-        onRemoteSharedPreferencesConnected(fromBundle, FROM_BUNDLE);
 
+        onRemoteSharedPreferencesConnected(fromBundle, FROM_BUNDLE);
+    }
+
+    private void bindFromBinder() {
         Intent binder = new Intent(this, RemoteService.class);
         binder.setAction(RemoteService.ACTION_REMOTE_SHARED_PREFERENCES);
         bindService(binder, conn, BIND_AUTO_CREATE);
+    }
 
+    private void bindFromAidl() {
         Intent aidl = new Intent(this, RemoteService.class);
         aidl.setAction(RemoteService.ACTION_REMOTE_SHARED_PREFERENCES_AIDL);
         bindService(aidl, connAidl, BIND_AUTO_CREATE);
@@ -176,10 +193,10 @@ public class MainActivity extends AppCompatActivity {
     static void log(int from, String msg) {
         switch (from) {
             case FROM_BUNDLE:
-                Log.d("SharedPreferences", "Bundle - " + msg);
+                Log.v("SharedPreferences", "Bundle - " + msg);
                 break;
             case FROM_BINDER:
-                Log.i("SharedPreferences", "Binder - " + msg);
+                Log.d("SharedPreferences", "Binder - " + msg);
                 break;
             case FROM_AIDL:
                 Log.i("SharedPreferences", "AIDL - " + msg);

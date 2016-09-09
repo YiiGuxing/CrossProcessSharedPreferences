@@ -6,71 +6,67 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import cn.tinkling.prefs.RemoteSharedPreferences;
-import cn.tinkling.prefs.RemoteSharedPreferencesDescriptor;
 
 public class RemoteProvider extends ContentProvider {
 
+    private RemoteSharedPreferences mRemotePrefs;
+
+    @Override
+    public boolean onCreate() {
+        SharedPreferences preferences =
+                getContext().getSharedPreferences("preferences", Context.MODE_PRIVATE);
+        mRemotePrefs = new RemoteSharedPreferences(preferences);
+
+        return true;
+    }
+
+    @Nullable
+    @Override
+    public Bundle call(@NonNull String method, String arg, Bundle extras) {
+        if ("getRemoteSharedPreferences".equals(method)) {
+            Bundle bundle = new Bundle();
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                bundle.putBinder("preferences", mRemotePrefs);
+            } else {
+                bundle.putParcelable("preferences", mRemotePrefs.getSharedPreferencesDescriptor());
+            }
+
+            return bundle;
+        }
+
+        return null;
+    }
+
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        // Implement this to handle requests to delete one or more rows.
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public String getType(Uri uri) {
-        // TODO: Implement this to handle requests for the MIME type of the data
-        // at the given URI.
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        // TODO: Implement this to handle requests to insert a new row.
         throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
-    public boolean onCreate() {
-        // TODO: Implement this to initialize your content provider on startup.
-        return true;
     }
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
-        // TODO: Implement this to handle query requests from clients.
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
-    public int update(Uri uri, ContentValues values, String selection,
-                      String[] selectionArgs) {
-        // TODO: Implement this to handle requests to update one or more rows.
+    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Nullable
-    @Override
-    public Bundle call(String method, String arg, Bundle extras) {
-
-        if ("getRemoteSharedPreferences".equals(method)) {
-            SharedPreferences preferences =
-                    getContext().getSharedPreferences("preferences", Context.MODE_PRIVATE);
-            RemoteSharedPreferences rsp = new RemoteSharedPreferences(preferences);
-            RemoteSharedPreferencesDescriptor descriptor = rsp.getSharedPreferencesDescriptor();
-
-            Bundle bundle = new Bundle();
-
-            // If API level >= 18.
-            // bundle.putBinder("preferences", rsp);
-            bundle.putParcelable("preferences", descriptor);
-            return bundle;
-        }
-
-        return null;
     }
 }
