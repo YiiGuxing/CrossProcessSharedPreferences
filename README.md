@@ -2,10 +2,19 @@
 AndroidRemoteSharedPreferences
 
 
-###用法
----------
-1、通过Bundle  
-远程进程:
+Gradle
+------
+```groovy
+compile 'cn.tinkling.prefs:remote-shared-preferences:1.0.0'
+```
+
+
+用法
+----
+**1.通过Bundle**
+
+- 远程进程:
+
 ```java
 SharedPreferences preferences = getContext().getSharedPreferences("preferences", Context.MODE_PRIVATE);
 RemoteSharedPreferences rsp = new RemoteSharedPreferences(preferences);
@@ -16,7 +25,8 @@ Bundle bundle = new Bundle();
 bundle.putParcelable("preferences", descriptor);
 // ... 将bundle发送到本地进程
 ```
-本地进程:
+- 本地进程:
+
 ```java
 // ...
 RemoteSharedPreferencesDescriptor d = bundle.getParcelable("preferences");
@@ -29,8 +39,10 @@ IRemoteSharedPreferences remotePrefs = RemoteSharedPreferences.asInterface(binde
 SharedPreferences preferences = new RemoteSharedPreferencesProxy(remotePrefs);
 // ...
 ```
-1、直接通过Binder  
-远程进程:
+**2.直接通过Binder**
+
+- 远程进程:
+
 ```java
 public class RemoteService extends Service {
 
@@ -49,7 +61,8 @@ public class RemoteService extends Service {
     }
 }
 ```
-本地进程:
+- 本地进程:
+
 ```java
 ServiceConnection conn = new ServiceConnection() {
     @Override
@@ -66,10 +79,4 @@ ServiceConnection conn = new ServiceConnection() {
 Intent binder = new Intent(this, RemoteService.class);
 binder.setAction(RemoteService.ACTION_REMOTE_SHARED_PREFERENCES);
 bindService(binder, conn, BIND_AUTO_CREATE);
-```
-
-###Gradle
----------
-```groovy
-compile 'cn.tinkling.prefs:remote-shared-preferences:1.0.0'
 ```
