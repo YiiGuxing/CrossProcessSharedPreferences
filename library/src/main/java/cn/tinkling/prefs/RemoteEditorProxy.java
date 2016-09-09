@@ -147,11 +147,4 @@ public class RemoteEditorProxy implements SharedPreferences.Editor {
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        Log.w(TAG, "finalize!!!");
-
-        super.finalize();
-    }
-
 }

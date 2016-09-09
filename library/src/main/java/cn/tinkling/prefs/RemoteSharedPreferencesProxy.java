@@ -220,8 +220,6 @@ public class RemoteSharedPreferencesProxy implements SharedPreferences {
     @Override
     protected void finalize() throws Throwable {
         try {
-            Log.w(TAG, "finalize!!!");
-
             synchronized (this) {
                 unregisterOnRemoteSharedPreferenceChangeListener();
             }

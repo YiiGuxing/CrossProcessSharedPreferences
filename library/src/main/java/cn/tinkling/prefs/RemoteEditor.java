@@ -3,7 +3,6 @@ package cn.tinkling.prefs;
 import android.content.SharedPreferences;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -14,8 +13,6 @@ import java.util.HashSet;
  * Created by tinkling on 15/12/18.
  */
 public class RemoteEditor extends IRemoteEditor.Stub {
-
-    private static final String TAG = "RemoteEditor";
 
     private final SharedPreferences.Editor mEditor;
 
@@ -87,13 +84,6 @@ public class RemoteEditor extends IRemoteEditor.Stub {
     @Override
     public void apply() throws RemoteException {
         mEditor.apply();
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        Log.w(TAG, "finalize!!!");
-
-        super.finalize();
     }
 
 }

@@ -6,7 +6,6 @@ import android.os.Build;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import java.util.Map;
 import java.util.Set;
@@ -18,11 +17,9 @@ import java.util.Set;
  */
 public class RemoteSharedPreferences extends IRemoteSharedPreferences.Stub {
 
-    private static final String TAG = "RemoteSharedPreferences";
-
     private final SharedPreferences mSharedPreferences;
 
-    final RemoteCallbackList<IOnSharedPreferenceChangeListener> mListenerList =
+    private final RemoteCallbackList<IOnSharedPreferenceChangeListener> mListenerList =
             new RemoteCallbackList<>();
     /* 不怕内存泄漏？如果mSharedPreferences来自于Context.getSharedPreferences()，那么不必担心，因为默认的
      * SharedPreferences的实现对Listener的引用为弱引用。但如果mSharedPreferences来自于其他来源，那就需要考
@@ -160,8 +157,6 @@ public class RemoteSharedPreferences extends IRemoteSharedPreferences.Stub {
 
     @Override
     protected void finalize() throws Throwable {
-        Log.w(TAG, "finalize!!!");
-
         try {
             synchronized (this) {
                 mListenerList.kill();
