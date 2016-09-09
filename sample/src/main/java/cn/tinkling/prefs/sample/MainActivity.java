@@ -7,12 +7,14 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import java.util.HashSet;
 import java.util.Random;
 
+import cn.tinkling.prefs.IRemoteSharedPreferences;
 import cn.tinkling.prefs.RemoteSharedPreferences;
 import cn.tinkling.prefs.RemoteSharedPreferencesDescriptor;
 import cn.tinkling.prefs.RemoteSharedPreferencesProxy;
@@ -21,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int FROM_BUNDLE = 0;
     private static final int FROM_BINDER = 1;
+    private static final int FROM_AIDL = 2;
 
     SharedPreferences fromBundle;
     PreferenceChangeListener listenerBundle;
@@ -28,14 +31,40 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences fromBinder;
     PreferenceChangeListener listenerBinder;
 
+    SharedPreferences fromAidl;
+    PreferenceChangeListener listenerAidl;
+
 
     ServiceConnection conn = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            fromBinder = new RemoteSharedPreferencesProxy(RemoteSharedPreferences.asInterface(service));
+            fromBinder =
+                    new RemoteSharedPreferencesProxy(RemoteSharedPreferences.asInterface(service));
             listenerBinder = new PreferenceChangeListener(FROM_BINDER);
             fromBinder.registerOnSharedPreferenceChangeListener(listenerBinder);
             onRemoteSharedPreferencesConnected(fromBinder, FROM_BINDER);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
+    ServiceConnection connAidl = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            try {
+                IRemoteSharedPreferences remoteSharedPreferences =
+                        IMyAidlInterface.Stub.asInterface(service).getRemoteSharedPreferences();
+                fromAidl = new RemoteSharedPreferencesProxy(
+                        remoteSharedPreferences);
+                listenerAidl = new PreferenceChangeListener(FROM_AIDL);
+                fromAidl.registerOnSharedPreferenceChangeListener(listenerAidl);
+                onRemoteSharedPreferencesConnected(fromAidl, FROM_AIDL);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
@@ -60,10 +89,16 @@ public class MainActivity extends AppCompatActivity {
         onRemoteSharedPreferencesConnected(fromBundle, FROM_BUNDLE);
 
         Intent binder = new Intent(this, RemoteService.class);
+        binder.setAction(RemoteService.ACTION_REMOTE_SHARED_PREFERENCES);
         bindService(binder, conn, BIND_AUTO_CREATE);
+
+        Intent aidl = new Intent(this, RemoteService.class);
+        aidl.setAction(RemoteService.ACTION_REMOTE_SHARED_PREFERENCES_AIDL);
+        bindService(aidl, connAidl, BIND_AUTO_CREATE);
     }
 
-    private void onRemoteSharedPreferencesConnected(final SharedPreferences preferences, final int from) {
+    private void onRemoteSharedPreferencesConnected(final SharedPreferences preferences,
+                                                    final int from) {
         log(from, "===================================");
         log(from, "getInt:       " + preferences.getInt("int", -1));
         log(from, "getLong:      " + preferences.getLong("long", -1));
@@ -130,16 +165,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         fromBundle.unregisterOnSharedPreferenceChangeListener(listenerBundle);
         fromBinder.unregisterOnSharedPreferenceChangeListener(listenerBinder);
+        fromAidl.unregisterOnSharedPreferenceChangeListener(listenerAidl);
 
         unbindService(conn);
+        unbindService(connAidl);
 
         super.onDestroy();
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        Log.d("MainActivity", "finalize!!!");
-        super.finalize();
     }
 
     static void log(int from, String msg) {
@@ -149,6 +180,9 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case FROM_BINDER:
                 Log.i("SharedPreferences", "Binder - " + msg);
+                break;
+            case FROM_AIDL:
+                Log.i("SharedPreferences", "AIDL - " + msg);
                 break;
         }
     }
