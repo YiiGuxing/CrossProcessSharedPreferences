@@ -19,8 +19,8 @@ public class RemoteProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        SharedPreferences preferences =
-                getContext().getSharedPreferences("preferences", Context.MODE_PRIVATE);
+        final SharedPreferences preferences =
+                getContext().getSharedPreferences("preferences-bundle", Context.MODE_PRIVATE);
         mRemotePrefs = new RemoteSharedPreferences(preferences);
 
         return true;
