@@ -42,7 +42,7 @@ public class RemoteService extends Service {
     public IBinder onBind(Intent intent) {
         String action = intent.getAction();
         if (ACTION_REMOTE_SHARED_PREFERENCES.equals(action)) { // binder
-            return mRemotePrefs;
+            return mRemotePrefs.asBinder();
         } else if (ACTION_REMOTE_SHARED_PREFERENCES_AIDL.equals(action)) { // aidl
             return mMyAidlInterface;
         }
