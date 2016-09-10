@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import cn.tinkling.prefs.RemoteSharedPreferences;
 
@@ -19,8 +20,8 @@ public class RemoteProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        SharedPreferences preferences =
-                getContext().getSharedPreferences("preferences", Context.MODE_PRIVATE);
+        final SharedPreferences preferences =
+                getContext().getSharedPreferences("preferences-bundle", Context.MODE_PRIVATE);
         mRemotePrefs = new RemoteSharedPreferences(preferences);
 
         return true;
