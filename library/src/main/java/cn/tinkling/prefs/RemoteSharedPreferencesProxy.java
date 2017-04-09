@@ -14,8 +14,6 @@ import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -30,10 +28,6 @@ public class RemoteSharedPreferencesProxy implements SharedPreferences {
 
     private static final String TAG = "RemoteSharedPrefsProxy";
 
-    /* 暂时引用mRemote，以防止其被回收，导致在finalize()方法无法反注册IOnSharedPreferenceChangeListener，
-     * 从而导致OnSharedPreferenceChangeListenerProxy泄漏而无法被回收。 */
-    private static final List<IRemoteSharedPreferences> sRemoteHolder =
-            Collections.synchronizedList(new LinkedList<IRemoteSharedPreferences>());
     private static final Object sContent = new Object();
 
     private final IRemoteSharedPreferences mRemote;
@@ -165,7 +159,6 @@ public class RemoteSharedPreferencesProxy implements SharedPreferences {
 
                 mListenerRegistered =
                         mRemote.registerOnSharedPreferenceChangeListener(mOnChangeListener);
-                sRemoteHolder.add(mRemote);
             }
             return mListenerRegistered;
         } catch (RemoteException e) {
@@ -180,7 +173,6 @@ public class RemoteSharedPreferencesProxy implements SharedPreferences {
             if (mListenerRegistered) {
                 mRemote.unregisterOnSharedPreferenceChangeListener(mOnChangeListener);
                 mListenerRegistered = false;
-                sRemoteHolder.remove(mRemote);
             }
         } catch (RemoteException e) {
             Log.w(TAG, "Unable to register listener because the remote process is dead.", e);
